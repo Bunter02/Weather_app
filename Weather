@@ -1,0 +1,52 @@
+from geopy.geocoders import Nominate
+
+def get_coords(city):
+    geo = Nominatim(user_agent="weather_app")
+    leo = geo.geocode(city)
+    if not loc:
+        raise ValueError(f"City: {city} not found")
+    return (loc.latitude, loc.longitude)
+
+import requests
+
+def get_weather(lat, lon):
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "daily": ["temperature_2m_max", "temperature_2m_min", "weathercode"],
+        "forecast_days": 3,
+        "timezone": "auto",
+    }
+    r =requests.get(url, params=params)
+    r.raise_for_status()
+    return r.json()["daily"]
+
+
+weather = {
+    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy",
+    3: "Overcast", 45: "Foggy", 51: "Light drizzle",
+    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain",
+    71: "Light snow", 80: "Rain showers", 95: "Thunderstorm",
+}
+
+def describe(code):
+    return weather.get(code, f"Unknown weather code: {code}")
+
+def show_forecast(city):
+    lat, lon = get_coords(city)
+    data = get_weather(lat, lon)
+
+    labels = ["Today", "Tomorrow", "Day after tomorrow"]
+    for i, label in enumerate(labels):
+        date = data["time"][i]
+        hi = data["temperature_2m_max"][i]
+        lo = data["temperature_2m_min"][i]
+        desc = describe(data["weathercode"][i])
+        print(f"{label} ({date}): {desc}")
+        print(f"  High: {hi}°C, Low: {lo}°C\n")
+
+if __name__ == "__main__":
+    city = input("Enter a city: ")
+    show_forecast(city)
+  
